@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Open Mobile Camera</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: "Lato", sans-serif;
+            user-scalable: 0;
+        }
+
+        h1 {
+            font-size: 10vw;
+            font-weight: bold;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 1.5vw;
+        }
+
+        h3 {
+            font-size: 1.5vw;
+        }
+
+        h4 {
+            font-size: 2.2vw;
+        }
+
+        h5 {
+            font-size: 3.5vw;
+        }
+
+        #camera-icon {
+            cursor: pointer;
+            width: 300px;
+            height: 300px;
+        }
+
+        #thumbnails {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .thumbnail {
+            cursor: pointer;
+            margin-right: 10px;
+            max-width: 300px;
+            max-height: 300px;
+        }
+
+        #photo-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: none;
+            z-index: 9999;
+        }
+
+        #photo-modal img {
+            max-width: 90%;
+            max-height: 90%;
+            margin: auto;
+            display: block;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        #additional-text {
+            display: none;
+        }
+
+        #additional-text h5 {
+            font-size: 3.5vw;
+        }
+
+        #additional-text input[type="text"],
+        #additional-text input[type="email"] {
+            display: block;
+            width: 600px;
+            height: 6vw;
+            margin: 20px auto;
+            font-size: 4vw;
+            font-weight: bold;
+        }
+
+        #additional-text .error-message {
+            color: red;
+            margin-top: 10px;
+            font-size: 3vw;
+            line-height: 1.2;
+        }
+
+        #additional-text button {
+            display: block;
+            width: 200px;
+            height: 6vw;
+            margin: 20px auto;
+            font-size: 4vw;
+            font-weight: bold;
+            background-color: #32612D;
+            color: white;
+        }
+
+        .center-align {
+            text-align: center;
+            font-size: 4vw;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <h1>Welcome to Artsyzan Walls</h1>
+
+    <h2 id="walls-text"><br>You can take pictures of your walls. We hang the paintings and<br>show them to you.</h2>
+
+    <h3 id="camera-text"><br>Click on the camera icon<br>to take pictures.<br>You can take up to 3 pictures.</h3>
+
+    <!-- Icon that triggers camera opening -->
+    <br><img id="camera-icon" src="camera_icon.png" alt="Camera Icon">
+
+    <h4 id="mobile-text">Please make sure<br>you've opened this page<br>on your mobile.</h4>
+
+    <!-- Hidden file input to capture image -->
+    <input type="file" id="image-input" accept="image/*" capture="camera" style="display: none;">
+
+    <!-- Photo Modal -->
+    <div id="photo-modal">
+        <img id="modal-image" src="">
+    </div>
+
+    <div id="thumbnails"></div>
+
+    <div id="additional-text">
+        <h5 id="additional-message">Perfect! We need some time<br> to prepare the images and<br>send them to you.<br>Please enter your first name<br>and your email address.</h5>
+        <input type="text" id="name-input" placeholder="Name">
+        <input type="email" id="email-input" placeholder="Email">
+        <button id="submit-button">SUBMIT</button>
+        <p id="error-message" class="error-message"></p>
+    </div>
+
+    <script>
+        // Function to open the mobile camera
+        function openCamera() {
+            var fileInput = document.getElementById('image-input');
+            fileInput.click();
+
+            // Hide the mobile text
+            var mobileText = document.getElementById('mobile-text');
+            mobileText.style.display = 'none';
+
+            // Hide the walls text
+            var wallsText = document.getElementById('walls-text');
+            wallsText.style.display = 'none';
+        }
+
+        // Event listener for the camera icon click
+        var cameraIcon = document.getElementById('camera-icon');
+        cameraIcon.addEventListener('click', openCamera);
+
+        function handleImageSelection(event) {
+            var file = event.target.files[0];
+            var thumbnailContainer = document.getElementById('thumbnails');
+            var thumbnailCount = thumbnailContainer.childElementCount;
+
+            // Create thumbnail element
+            var thumbnail = document.createElement('img');
+            thumbnail.classList.add('thumbnail');
+            thumbnail.src = URL.createObjectURL(file);
+
+            // Enlarge the thumbnails to 2.5 times their current size
+            thumbnail.style.maxWidth = '350px';
+            thumbnail.style.maxHeight = '350px';
+
+            // Append the thumbnail to the container
+            thumbnailContainer.appendChild(thumbnail);
+
+            // Add click event listener to thumbnail
+            thumbnail.addEventListener('click', function() {
+                var photoModal = document.getElementById('photo-modal');
+                var modalImage = document.getElementById('modal-image');
+
+                modalImage.src = thumbnail.src;
+
+                // Show the photo modal
+                photoModal.style.display = 'block';
+
+                // Push a new state to the history to handle the back button
+                history.pushState(null, null, '#photo-modal');
+            });
+
+            // Hide the camera icon and text after taking the 3rd photo
+            if (thumbnailCount >= 2) {
+                cameraIcon.style.display = 'none';
+                var cameraText = document.getElementById('camera-text');
+                cameraText.style.display = 'none';
+                var additionalText = document.getElementById('additional-text');
+                additionalText.style.display = 'block';
+            }
+        }
+
+        // Event listener for image input change
+        var imageInput = document.getElementById('image-input');
+        imageInput.addEventListener('change', handleImageSelection);
+
+        // Function to handle back button press on mobile
+        window.addEventListener('popstate', function(event) {
+            var photoModal = document.getElementById('photo-modal');
+            var modalImage = document.getElementById('modal-image');
+
+            // Check if the photo modal is open
+            if (photoModal.style.display === 'block') {
+                photoModal.style.display = 'none';
+//                photoModal.innerHTML = "";
+                modalImage.src = null;
+
+                // Prevent the default back behavior
+                history.pushState(null, null, '#');
+                event.preventDefault();
+            }
+        });
+
+        // Function to handle swipe gestures
+        function handleSwipe(event) {
+            var modalImage = document.getElementById('modal-image');
+            var thumbnails = Array.from(document.getElementsByClassName('thumbnail'));
+            var currentIndex = thumbnails.findIndex(function(thumbnail) {
+                return thumbnail.src === modalImage.src;
+            });
+
+            if (event.deltaX > 0) {
+                // Swipe right
+                if (currentIndex < thumbnails.length - 1) {
+                    currentIndex++;
+                }
+            } else {
+                // Swipe left
+                if (currentIndex > 0) {
+                    currentIndex--;
+                }
+            }
+
+            modalImage.src = thumbnails[currentIndex].src;
+        }
+
+        // Add swipe event listeners to the photo modal
+        var photoModal = document.getElementById('photo-modal');
+        photoModal.addEventListener('touchstart', handleTouchStart);
+        photoModal.addEventListener('touchmove', handleTouchMove);
+
+        var xStart = null;
+
+        function handleTouchStart(event) {
+            xStart = event.touches[0].clientX;
+        }
+
+        function handleTouchMove(event) {
+            if (!xStart) {
+                return;
+            }
+
+            var xEnd = event.touches[0].clientX;
+            var xDiff = xStart - xEnd;
+
+            if (Math.abs(xDiff) > 50) {
+                handleSwipe({ deltaX: xDiff });
+                xStart = null;
+            }
+        }
+
+        // Function to handle form submission
+        function handleSubmit(event) {
+            event.preventDefault();
+            var nameInput = document.getElementById('name-input');
+            var emailInput = document.getElementById('email-input');
+            var errorMessage = document.getElementById('error-message');
+
+            // Clear any previous error messages
+            errorMessage.innerHTML = '';
+
+            // Validate name and email inputs
+            var name = nameInput.value.trim();
+            var email = emailInput.value.trim();
+            var hasNameError = false;
+            var hasEmailError = false;
+
+            if (name === '') {
+                hasNameError = true;
+                errorMessage.innerHTML += 'Please enter your first name.<br>';
+            }
+
+            if (email === '') {
+                hasEmailError = true;
+                errorMessage.innerHTML += 'Please enter your email address.<br>';
+            }
+
+            if (hasNameError && hasEmailError) {
+                errorMessage.style.color = 'red';
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            if (hasNameError || hasEmailError) {
+                errorMessage.style.color = 'red';
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            // Hide any previous messages
+            var previousMessages = document.querySelectorAll('.message');
+            for (var i = 0; i < previousMessages.length; i++) {
+                previousMessages[i].style.display = 'none';
+            }
+
+            // Hide submit button and both textboxes
+            var submitButton = document.getElementById('submit-button');
+            submitButton.style.display = 'none';
+            var nameTextBox = document.getElementById('name-input');
+            nameTextBox.style.display = 'none';
+            var emailTextBox = document.getElementById('email-input');
+            emailTextBox.style.display = 'none';
+
+            // Hide the welcome text
+            var welcomeText = document.getElementsByTagName('h1')[0];
+            welcomeText.style.display = 'none';
+
+            // Hide additional message
+            var additionalMessage = document.getElementById('additional-message');
+            additionalMessage.style.display = 'none';
+            var additionalText = document.getElementById('additional-text');
+
+            // Create the thank you message
+            var thankYouMessage = document.createElement('h4');
+            thankYouMessage.style.fontSize = '4vw';
+            thankYouMessage.style.textAlign = 'center';
+            thankYouMessage.style.margin = '0';
+            thankYouMessage.innerHTML = 'Thank you ' + name + '<br><br>You can tap on each image<br>and swipe left or right.';
+
+            // Insert the thank you message above the thumbnails
+            var thumbnailsContainer = document.getElementById('thumbnails');
+            thumbnailsContainer.parentNode.insertBefore(thankYouMessage, thumbnailsContainer);
+
+            // Show the thumbnails
+            thumbnailsContainer.style.display = 'flex';
+
+            // Scroll to the thumbnails
+            thumbnailsContainer.scrollIntoView({ behavior: 'smooth' });
+
+            // Send the form data to the server
+            // Use fetch or XMLHttpRequest to send the data to the server
+        }
+
+        // Event listener for form submission
+        var submitButton = document.getElementById('submit-button');
+        submitButton.addEventListener('click', handleSubmit);
+    </script>
+</body>
+</html>
